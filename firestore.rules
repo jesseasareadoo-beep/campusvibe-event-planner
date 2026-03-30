@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email']) &&
+             data.uid is string &&
+             data.email is string;
+    }
+
+    function isValidBooking(data) {
+      return data.keys().hasAll(['userId', 'eventType', 'guestCount', 'status']) &&
+             data.userId is string &&
+             data.eventType is string &&
+             data.guestCount is number &&
+             data.status in ['pending', 'confirmed', 'completed', 'cancelled'] &&
+             (!('estimatedCost' in data) || data.estimatedCost is number);
+    }
+
+    function isValidTask(data) {
+      return data.keys().hasAll(['userId', 'text', 'completed']) &&
+             data.userId is string &&
+             data.text is string &&
+             data.completed is bool &&
+             (!('urgent' in data) || data.urgent is bool);
+    }
+
+    function isValidMoodBoard(data) {
+      return data.keys().hasAll(['userId', 'title', 'imageUrl']) &&
+             data.userId is string &&
+             data.title is string &&
+             data.imageUrl is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) && isValidUser(request.resource.data);
+    }
+    
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidBooking(request.resource.data) && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && (isDocOwner() || isAdmin()) && isValidBooking(request.resource.data);
+      allow delete: if isAdmin();
+    }
+    
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidTask(request.resource.data) && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && isDocOwner() && isValidTask(request.resource.data);
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+    
+    match /moodboards/{moodboardId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidMoodBoard(request.resource.data) && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && isDocOwner() && isValidMoodBoard(request.resource.data);
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+    
+    match /blog_posts/{postId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         request.auth.token.email == "lt-jaadoo4422@st.umat.edu.gh");
+    }
+  }
+}

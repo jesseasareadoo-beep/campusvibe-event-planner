@@ -1,0 +1,103 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A student user of the CampusVibe platform.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique ID of the user from Firebase Auth." },
+        "displayName": { "type": "string", "description": "The user's full name." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "photoURL": { "type": "string", "description": "The user's profile picture URL." },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "eventTypes": { "type": "array", "items": { "type": "string" } },
+            "budgetRange": { "type": "string" }
+          }
+        }
+      },
+      "required": ["uid", "email"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "An event booking request.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "eventType": { "type": "string" },
+        "guestCount": { "type": "number" },
+        "services": { "type": "array", "items": { "type": "string" } },
+        "estimatedCost": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "completed", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "eventType", "guestCount", "status"]
+    },
+    "MoodBoard": {
+      "title": "MoodBoard",
+      "description": "A single inspiration item for an event.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "imageUrl"]
+    },
+    "BlogPost": {
+      "title": "BlogPost",
+      "description": "An inspiration blog post.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string" },
+        "author": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["title", "content", "category"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A single planning task.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "text": { "type": "string" },
+        "completed": { "type": "boolean" },
+        "urgent": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "text", "completed"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile data."
+    },
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "Event booking requests."
+    },
+    "/moodboards/{moodboardId}": {
+      "schema": "MoodBoard",
+      "description": "User mood boards."
+    },
+    "/blog_posts/{postId}": {
+      "schema": "BlogPost",
+      "description": "Inspiration blog posts."
+    },
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "User planning tasks."
+    }
+  }
+}
